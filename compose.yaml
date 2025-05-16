@@ -1,0 +1,57 @@
+services:
+  web:
+    depends_on:
+      - api
+    build: ./client
+    ports:
+     - 5173:5173
+    environment:
+      VITE_API_URL: http://api:3000
+    develop:
+      watch:
+        - path: ./client/package.json
+          action: rebuild
+        - path: ./client/package-lock.json
+          action: rebuild
+        - path: ./client
+          target: /app
+          action: sync
+
+  api:
+    depends_on:
+      - db
+      - redis
+    build: ./server
+    ports:
+      - 3000:3000
+    environment:
+      DB_URL: mongodb://db/ecommerce
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    develop:
+      watch:
+        - path: ./server/package.json
+          action: rebuild
+        - path: ./server/package-lock.json
+          action: rebuild
+        - path: ./server
+          target: /app
+          action: sync
+    
+  db:
+    image: mongo:latest
+    ports:
+      - 27017:27017
+    volumes:
+      - ecommerce:/data/db
+
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+    volumes:
+      - redis-data:/data
+
+volumes:
+  ecommerce:
+  redis-data:
