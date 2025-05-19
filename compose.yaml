@@ -26,8 +26,11 @@ services:
       - 3000:3000
     environment:
       DB_URL: mongodb://db/ecommerce
+      API_PORT: 3000
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      JWT_SECRET: Test@12345
+      JWT_EXPIRES_IN: 1h
     develop:
       watch:
         - path: ./server/package.json

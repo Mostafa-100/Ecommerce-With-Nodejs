@@ -8,6 +8,8 @@ RUN npm i && npm install -g nodemon
 
 COPY . .
 
+WORKDIR /app/src
+
 EXPOSE 3000
 
-CMD ["nodemon", "app"]
+CMD ["nodemon", "server"]
