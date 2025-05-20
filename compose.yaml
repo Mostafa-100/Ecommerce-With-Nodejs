@@ -1,27 +1,9 @@
 services:
-  web:
-    depends_on:
-      - api
-    build: ./client
-    ports:
-     - 5173:5173
-    environment:
-      VITE_API_URL: http://api:3000
-    develop:
-      watch:
-        - path: ./client/package.json
-          action: rebuild
-        - path: ./client/package-lock.json
-          action: rebuild
-        - path: ./client
-          target: /app
-          action: sync
-
   api:
     depends_on:
       - db
       - redis
-    build: ./server
+    build: ./
     ports:
       - 3000:3000
     environment:
@@ -31,13 +13,17 @@ services:
       REDIS_PORT: 6379
       JWT_SECRET: Test@12345
       JWT_EXPIRES_IN: 1h
+      MAILTRAP_HOST: sandbox.smtp.mailtrap.io
+      MAILTRAP_PORT: 2525
+      MAILTRAP_AUTH_USER: 1ad2ff42c0cf2c
+      MAILTRAP_AUTH_PASS: 99201ba19ab513
     develop:
       watch:
-        - path: ./server/package.json
+        - path: ./package.json
           action: rebuild
-        - path: ./server/package-lock.json
+        - path: ./package-lock.json
           action: rebuild
-        - path: ./server
+        - path: ./
           target: /app
           action: sync
     
