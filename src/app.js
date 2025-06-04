@@ -1,6 +1,9 @@
 const express = require("express");
 const app = express();
 
+app.set("view engine", "ejs");
+app.set("views", "/emails");
+
 const authRoutes = require("./routes/authRoutes");
 
 app.use(express.json());

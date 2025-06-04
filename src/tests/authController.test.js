@@ -17,17 +17,17 @@ beforeEach(async () => {
     {
       fullname: "Mostafa aour",
       email: "m@g.com",
-      password: "fdfsdfsdfsdfsdfsd",
+      password: bcrypt.hashSync("Mm@12345", 10),
     },
     {
       fullname: "Hassan jawad",
       email: "h@g.com",
-      password: "fdfsdfsdfsdfsdfdfsdfsd",
+      password: bcrypt.hashSync("Hh@12345", 10),
     },
     {
       fullname: "Youssef tawil",
       email: "y@g.com",
-      password: "fdfsdfsdfsdfs94343dfsd",
+      password: bcrypt.hashSync("Yy@12345", 10),
     },
   ];
 
@@ -83,12 +83,59 @@ describe("POST /register", () => {
     expect(errors.email).toBe("Invalid email address");
 
     expect(errors.password).not.toBeNull();
-    expect(errors.password).toBe("");
+    expect(errors.password.length).toBeGreaterThan(2);
+    expect(errors.password[0].length).toBeGreaterThan(5);
+    expect(errors.password[1].length).toBeGreaterThan(5);
+  });
+
+  it("should return error if email has already taken", async () => {
+    const data = {
+      fullname: "Test",
+      email: "m@g.com",
+      password: "A@232343",
+    };
+
+    const res = await request(app).post("/register").send(data);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.errors.email).toBe("Invalid email address");
   });
 });
 
 describe("POST /login", () => {
-  it("should login user if data is valid", async () => {
-    const user = {};
+  it("should login user if exists", async () => {
+    const data = {
+      email: "m@g.com",
+      password: "Mm@12345",
+    };
+
+    const res = await request(app).post("/login").send(data);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.token).not.toBeNull();
+  });
+
+  it("should return error when user not exists", async () => {
+    // Either email and password is not correct
+    const data1 = {
+      email: "notexist@g.com",
+      password: "Not@012345",
+    };
+
+    // email is correct but not password
+    const data2 = {
+      email: "m@g.com",
+      password: "Notcorrect@12345",
+    };
+
+    const res1 = await request(app).post("/login").send(data1);
+
+    expect(res1.statusCode).toBe(401);
+    expect(res1.body.message).toBe("Invalid credentials");
+
+    const res2 = await request(app).post("/login").send(data2);
+
+    expect(res2.statusCode).toBe(401);
+    expect(res2.body.message).toBe("Invalid credentials");
   });
 });

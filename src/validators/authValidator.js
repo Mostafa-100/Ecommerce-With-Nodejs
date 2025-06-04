@@ -1,4 +1,5 @@
 const { body } = require("express-validator");
+const User = require("../models/User");
 
 exports.registerValidator = [
   body("fullname")
@@ -15,7 +16,11 @@ exports.registerValidator = [
     .withMessage("Email is required")
     .bail()
     .isEmail()
-    .withMessage("Invalid email address"),
+    .withMessage("Invalid email address")
+    .custom(async (value) => {
+      const user = await User.findOne({ email: value });
+      if (user) throw new Error("Invalid email address");
+    }),
 
   body("password")
     .notEmpty()

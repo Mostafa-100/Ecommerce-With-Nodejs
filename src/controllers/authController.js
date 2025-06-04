@@ -2,15 +2,15 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../services/sendEmail");
+const path = require("path");
+
+const ejs = require("ejs");
 
 exports.register = async (req, res, next) => {
   try {
     const { fullname, email, password } = req.body;
 
     const existingUser = await User.findOne({ email });
-
-    if (existingUser)
-      return res.status(400).json({ error: "User already exists" });
 
     const hashedPassword = bcrypt.hashSync(password, 10);
 
@@ -60,14 +60,13 @@ exports.requestPasswordReset = async (req, res, next) => {
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
 
-    const resetPasswordEmail = `
-      <p>You requested a password reset.</p>
-      <p>Click the link below to reset your password:</p>
-      <a href="${resetLink}">${resetLink}</a>
-      <p>This link will expire in 10 minutes.</p>
-    `;
+    const emailPath = path.join(__dirname, "../emails/resetPasswordEmail.ejs");
 
-    sendEmail("Password Reset", resetPasswordEmail);
+    const resetPasswordEmail = await ejs.renderFile(emailPath, {
+      resetLink,
+    });
+
+    sendEmail(user.email, "Password Reset", resetPasswordEmail);
 
     res.json({ message: "Password reset link sent" });
   } catch (error) {

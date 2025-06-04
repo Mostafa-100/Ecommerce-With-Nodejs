@@ -25,4 +25,9 @@ router.post(
   authController.login
 );
 
+router.post(
+  "/password-reset-email-request",
+  authController.requestPasswordReset
+);
+
 module.exports = router;
