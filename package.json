@@ -1,4 +1,10 @@
 {
+  "name": "ecommerce-api-with-expressjs",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "nodemon app",
+    "test": "jest"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "dotenv": "^16.5.0",
@@ -7,5 +13,9 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.14.1",
     "nodemailer": "^7.0.3"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.1.1"
   }
 }

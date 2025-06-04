@@ -17,6 +17,7 @@ services:
       MAILTRAP_PORT: 2525
       MAILTRAP_AUTH_USER: 1ad2ff42c0cf2c
       MAILTRAP_AUTH_PASS: 99201ba19ab513
+      FRONTEND_URL: http://localhost:5173
     develop:
       watch:
         - path: ./package.json
@@ -28,16 +29,16 @@ services:
           action: sync
     
   db:
-    image: mongo:latest
+    image: mongo:8.0.10-rc0-noble
     ports:
-      - 27017:27017
+      - 27018:27017
     volumes:
       - ecommerce:/data/db
 
   redis:
-    image: redis:latest
+    image: redis:8.0.1
     ports:
-      - 6379:6379
+      - 6378:6379
     volumes:
       - redis-data:/data
 

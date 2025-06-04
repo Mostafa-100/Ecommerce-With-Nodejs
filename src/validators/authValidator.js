@@ -31,12 +31,6 @@ exports.registerValidator = [
     .withMessage("Must contain a number")
     .matches(/[@$!%*?&#]/)
     .withMessage("Must contain a special character"),
-
-  body("isAdmin").optional().isBoolean(),
-
-  body("confirmPassword")
-    .custom((value, { req }) => value === req.body.password)
-    .withMessage("Passwords do not match"),
 ];
 
 exports.loginValidator = [
