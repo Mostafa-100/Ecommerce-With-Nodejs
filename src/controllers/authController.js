@@ -1,8 +1,9 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-const sendEmail = require("../services/sendEmail");
+const sendEmail = require("../utils/sendEmail");
 const path = require("path");
+const AppError = require("../utils/AppError");
 
 const ejs = require("ejs");
 
@@ -10,7 +11,11 @@ exports.register = async (req, res, next) => {
   try {
     const { fullname, email, password } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    const isEmailTaken = await User.findOne({ email });
+
+    if (isEmailTaken) {
+      throw new AppError("Invalid credentials", 401);
+    }
 
     const hashedPassword = bcrypt.hashSync(password, 10);
 
@@ -29,12 +34,14 @@ exports.login = async (req, res, next) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
 
-    if (!user) return res.status(401).json({ message: "Invalid credentials" });
+    if (!user) {
+      throw new AppError("Invalid credentials", 401);
+    }
 
     const hasSamePassword = await bcrypt.compare(password, user?.password);
 
     if (!hasSamePassword) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      throw new AppError("Invalid credentials", 401);
     }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -47,12 +54,15 @@ exports.login = async (req, res, next) => {
   }
 };
 
+// TODO: Add rate limiter to this function and others
 exports.requestPasswordReset = async (req, res, next) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
 
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "10m",
@@ -74,16 +84,16 @@ exports.requestPasswordReset = async (req, res, next) => {
   }
 };
 
-/*
-  I think you should make tests, even with chatgpt
-*/
-exports.resetPassword = async (req, res) => {
+exports.resetPassword = async (req, res, next) => {
   const { token, password } = req.body;
   try {
     const decode = jwt.verify(token, process.env.JWT_SECRET);
+
     const user = await User.findById(decode.id);
 
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
 
     user.password = await bcrypt.hash(password, 10);
 

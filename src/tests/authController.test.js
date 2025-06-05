@@ -1,9 +1,14 @@
 const request = require("supertest");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
 const app = require("../app");
 
 const User = require("../models/User");
+
+jest.mock("../utils/sendEmail");
+const sendEmail = require("../utils/sendEmail");
 
 beforeAll(async () => {
   const MONGO_URI = "mongodb://db/ecommercetest";
@@ -131,11 +136,67 @@ describe("POST /login", () => {
     const res1 = await request(app).post("/login").send(data1);
 
     expect(res1.statusCode).toBe(401);
-    expect(res1.body.message).toBe("Invalid credentials");
+    expect(res1.body).toHaveProperty("error", "Invalid credentials");
 
     const res2 = await request(app).post("/login").send(data2);
 
     expect(res2.statusCode).toBe(401);
-    expect(res2.body.message).toBe("Invalid credentials");
+    expect(res2.body).toHaveProperty("error", "Invalid credentials");
+  });
+});
+
+describe("POST /password-reset-email-request", () => {
+  it("should send reset email if user exists", async () => {
+    const email = "m@g.com";
+    const res = await request(app)
+      .post("/password-reset-email-request")
+      .send({ email });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty("message", "Password reset link sent");
+  });
+
+  it("should return 404 error if user not exists", async () => {
+    const email = "notexist@gm.com";
+
+    const res = await request(app)
+      .post("/password-reset-email-request")
+      .send({ email });
+
+    expect(res.statusCode).toBe(404);
+    expect(res.body).toHaveProperty("error", "User not found");
+  });
+});
+
+describe("POST /reset-password", () => {
+  it("should reset password if token is valid", async () => {
+    const user = await User.findOne({ email: "m@g.com" });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "10m",
+    });
+    const password = "Test@12345";
+
+    const res = await request(app)
+      .post("/reset-password")
+      .send({ token, password });
+
+    console.log(res.body);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty("message", "Password has been reset");
+  });
+
+  it("should return 500 error if token not valid", async () => {
+    const token = jwt.sign({ id: 1 }, "Notcorrect@12345", {
+      expiresIn: "5m",
+    });
+    const password = "Password@12345";
+
+    const res = await request(app)
+      .post("/reset-password")
+      .send({ token, password });
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body).toHaveProperty("error", "invalid signature");
   });
 });

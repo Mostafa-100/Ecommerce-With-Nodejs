@@ -48,3 +48,20 @@ exports.loginValidator = [
 
   body("password").notEmpty().withMessage("password is required"),
 ];
+
+exports.resetPasswordValidator = [
+  body("password")
+    .notEmpty()
+    .withMessage("Password is required")
+    .bail()
+    .isLength({ min: 8 })
+    .withMessage("Password too short.")
+    .matches(/[a-z]/)
+    .withMessage("Must contain a lowercase letter")
+    .matches(/[A-Z]/)
+    .withMessage("Must contain an uppercase letter")
+    .matches(/\d/)
+    .withMessage("Must contain a number")
+    .matches(/[@$!%*?&#]/)
+    .withMessage("Must contain a special character"),
+];

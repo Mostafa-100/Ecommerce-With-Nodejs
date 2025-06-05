@@ -7,27 +7,32 @@ const authController = require("../controllers/authController");
 const {
   registerValidator,
   loginValidator,
+  resetPasswordValidator,
 } = require("../validators/authValidator");
 
-const changeValidationErrorsResponseFormat = require("../middlewares/changeValidationErrorsResponseFormat");
+const validateRequest = require("../middlewares/validateRequest");
+
+const withValidation = (validator, handler) => [
+  validator,
+  validateRequest,
+  handler,
+];
 
 router.post(
   "/register",
-  registerValidator,
-  changeValidationErrorsResponseFormat,
-  authController.register
+  ...withValidation(registerValidator, authController.register)
 );
 
-router.post(
-  "/login",
-  loginValidator,
-  changeValidationErrorsResponseFormat,
-  authController.login
-);
+router.post("/login", ...withValidation(loginValidator, authController.login));
 
 router.post(
   "/password-reset-email-request",
   authController.requestPasswordReset
+);
+
+router.post(
+  "/reset-password",
+  ...withValidation(resetPasswordValidator, authController.resetPassword)
 );
 
 module.exports = router;
