@@ -25,10 +25,8 @@ app.use(helmet());
 
 app.use(express.json());
 
-app.disable("x-powered-by");
-
 app.use("/", authRoutes);
-app.use("/v1/api", productRoutes);
+app.use("/api/v1", productRoutes);
 
 app.use(customErrorHandler);
 

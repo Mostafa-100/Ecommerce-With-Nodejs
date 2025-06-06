@@ -10,13 +10,7 @@ const {
   resetPasswordValidator,
 } = require("../validators/authValidator");
 
-const validateRequest = require("../middlewares/validateRequest");
-
-const withValidation = (validator, handler) => [
-  validator,
-  validateRequest,
-  handler,
-];
+const withValidation = require("../utils/withValidation");
 
 router.post(
   "/register",
