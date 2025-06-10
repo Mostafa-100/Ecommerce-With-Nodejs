@@ -11,12 +11,12 @@ const {
 const withValidation = require("../utils/withValidation");
 
 router.get(
-  "/products",
+  "/",
   ...withValidation(getProductsValidator, productController.getProducts)
 );
 
 router.get(
-  "/products/:id",
+  "/:id",
   ...withValidation(getOneProductValidator, productController.getOneProduct)
 );
 

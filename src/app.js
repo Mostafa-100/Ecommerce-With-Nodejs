@@ -10,6 +10,7 @@ app.set("views", "/emails");
 
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -26,7 +27,8 @@ app.use(helmet());
 app.use(express.json());
 
 app.use("/", authRoutes);
-app.use("/api/v1", productRoutes);
+app.use("/api/v1/products", productRoutes);
+app.use("/api/v1/categories", categoryRoutes);
 
 app.use(customErrorHandler);
 

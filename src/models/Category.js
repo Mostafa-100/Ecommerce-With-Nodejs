@@ -18,6 +18,24 @@ const categorySchema = Schema({
   },
 });
 
+categorySchema.pre("save", function (next) {
+  this.name = this.name.toLowerCase();
+  next();
+});
+
+function normalizeName(next) {
+  if (this.getUpdate().name) {
+    const name = this.getUpdate().name;
+    this.getUpdate().name = name;
+  }
+
+  next();
+}
+
+categorySchema.pre("findOneAndUpdate", normalizeName);
+categorySchema.pre("updateOne", normalizeName);
+categorySchema.pre("updateMany", normalizeName);
+
 const Category = mongoose.model("Category", categorySchema);
 
 module.exports = Category;
