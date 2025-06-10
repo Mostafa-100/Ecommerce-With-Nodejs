@@ -1,4 +1,4 @@
-FROM node:22.16.0
+FROM node:22.12.0
 
 WORKDIR /app
 
@@ -12,4 +12,4 @@ WORKDIR /app/src
 
 EXPOSE 3000
 
-CMD ["nodemon", "server"]
+CMD ["nodemon", "server.js"]
