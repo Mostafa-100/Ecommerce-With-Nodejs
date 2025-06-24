@@ -33,3 +33,14 @@ exports.addItemToCart = async (cart, productId, quantity) => {
 
   await cart.save();
 };
+
+exports.fetchCart = async (ownerId) => {
+  const cart = await Cart.findOne({ ownerId }).populate("items.product");
+  return cart;
+};
+
+exports.migrateCartItems = async (fromCart, toCart) => {
+  toCart.items.push(...fromCart.items);
+  await toCart.save();
+  await fromCart.deleteOne();
+};

@@ -1,5 +1,10 @@
 const { v4: uuidv4 } = require("uuid");
-const { getCart, addItemToCart } = require("../services/cartService");
+const {
+  getCart,
+  addItemToCart,
+  fetchCart,
+  migrateCartItems,
+} = require("../services/cartService");
 
 exports.addToCart = async (req, res, next) => {
   const { productId, quantity = 1 } = req.body;
@@ -17,7 +22,9 @@ exports.addToCart = async (req, res, next) => {
     res.cookie("guestId", guestId, { maxAge: 1000 * 60 * 60 * 24 * 30 });
   }
 
-  const cartOwnerId = user?._id ?? guestId;
+  const cartOwnerId = user?.id ?? guestId;
+
+  console.log("user id: ", user);
 
   const cart = await getCart(cartOwnerId);
 
@@ -27,4 +34,28 @@ exports.addToCart = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+exports.getCartItems = async (req, res) => {
+  const user = req.user;
+  const guestId = req.cookies.guestId;
+  let userCart = null;
+
+  if (user) {
+    console.log("User", user);
+    userCart = await fetchCart(user.id);
+  }
+
+  if (guestId) {
+    const guestCart = await fetchCart(guestId);
+    if (guestCart) {
+      if (userCart) {
+        await migrateCartItems(guestCart, userCart);
+      } else {
+        res.json(guestCart);
+      }
+    }
+  }
+
+  res.json(userCart);
 };
