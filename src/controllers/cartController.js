@@ -4,27 +4,27 @@ const {
   addItemToCart,
   fetchCart,
   migrateCartItems,
+  deleteItem,
+  deleteCart,
 } = require("../services/cartService");
+const AppError = require("../utils/AppError");
 
 exports.addToCart = async (req, res, next) => {
   const { productId, quantity = 1 } = req.body;
-  const user = req.user;
+  const userId = req.user?.id;
   let guestId = req.cookies.guestId;
 
-  /*
-    if user is logged in we will use it to make cart
-    if not we will use guest id to make the cart
-    if neither user is logged in or guest id provided we will create new guest id to make cart
-  */
+  let cartOwnerId = null;
 
-  if (!guestId) {
+  if (guestId) cartOwnerId = guestId;
+
+  if (userId) cartOwnerId = userId;
+
+  if (!guestId && !userId) {
     guestId = uuidv4();
+    cartOwnerId = guestId;
     res.cookie("guestId", guestId, { maxAge: 1000 * 60 * 60 * 24 * 30 });
   }
-
-  const cartOwnerId = user?.id ?? guestId;
-
-  console.log("user id: ", user);
 
   const cart = await getCart(cartOwnerId);
 
@@ -36,26 +36,69 @@ exports.addToCart = async (req, res, next) => {
   }
 };
 
-exports.getCartItems = async (req, res) => {
-  const user = req.user;
+exports.getCartItems = async (req, res, error) => {
+  const userId = req.user?.id;
   const guestId = req.cookies.guestId;
   let userCart = null;
 
-  if (user) {
-    console.log("User", user);
-    userCart = await fetchCart(user.id);
-  }
+  try {
+    if (userId) {
+      userCart = await fetchCart(userId);
+    }
 
-  if (guestId) {
-    const guestCart = await fetchCart(guestId);
-    if (guestCart) {
-      if (userCart) {
-        await migrateCartItems(guestCart, userCart);
-      } else {
-        res.json(guestCart);
+    if (guestId) {
+      const guestCart = await fetchCart(guestId);
+      if (guestCart) {
+        if (userCart) {
+          await migrateCartItems(guestCart, userCart);
+        } else {
+          res.json(guestCart);
+        }
       }
     }
-  }
 
-  res.json(userCart);
+    res.json(userCart);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteCartItem = async (req, res, next) => {
+  const { itemId } = req.body;
+  const userId = req.user?.id;
+  const guestId = req.cookies.guestId;
+
+  try {
+    if (userId) {
+      const cart = await fetchCart(userId);
+
+      if (!cart) throw new AppError("cart not found", 404);
+
+      await deleteItem(cart, itemId);
+    } else {
+      const cart = await fetchCart(guestId);
+
+      if (!cart) throw new AppError("cart not found", 404);
+
+      await deleteItem(cart, itemId);
+    }
+
+    res.json({ message: "cart item has been deleted successfuly" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteCart = async (req, res, next) => {
+  const userId = req.user?.id;
+  const guestId = req.cookies.guestId;
+
+  try {
+    if (userId) await deleteCart(userId);
+    if (guestId) await deleteCart(guestId);
+
+    res.json({ message: "cart has been deleted successfuly" });
+  } catch (error) {
+    next(error);
+  }
 };

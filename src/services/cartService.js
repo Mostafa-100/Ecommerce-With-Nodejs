@@ -42,5 +42,29 @@ exports.fetchCart = async (ownerId) => {
 exports.migrateCartItems = async (fromCart, toCart) => {
   toCart.items.push(...fromCart.items);
   await toCart.save();
-  await fromCart.deleteOne();
+  await fromCart.deleteMany();
+};
+
+exports.deleteItem = async (cart, itemId) => {
+  const item = cart.items.find((item) => item._id.toString() === itemId);
+
+  if (!item) {
+    throw new AppError("item not found", 404);
+  }
+
+  cart.items = cart.items.filter((item) => {
+    return item._id.toString() !== itemId;
+  });
+
+  await cart.save();
+};
+
+exports.deleteCart = async (ownerId) => {
+  const cart = await Cart.findOne({ ownerId });
+
+  if (!cart) {
+    throw new AppError("cart not found", 404);
+  }
+
+  await cart.deleteOne();
 };
