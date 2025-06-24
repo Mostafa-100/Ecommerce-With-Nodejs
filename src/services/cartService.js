@@ -1,0 +1,35 @@
+const Cart = require("../models/Cart");
+const Product = require("../models/Product");
+const AppError = require("../utils/AppError");
+
+exports.getCart = async (cartOwnerId) => {
+  const cart = await Cart.findOne({ ownerId: cartOwnerId });
+
+  if (!cart) {
+    const cart = new Cart({ ownerId: cartOwnerId });
+    await cart.save();
+    return cart;
+  }
+
+  return cart;
+};
+
+exports.addItemToCart = async (cart, productId, quantity) => {
+  const product = await Product.findById(productId);
+
+  if (!product) {
+    throw new AppError("Product not found", 404);
+  }
+
+  const existingItem = cart.items.find((item) => {
+    return item.product.toString() === productId;
+  });
+
+  if (existingItem) {
+    existingItem.quantity += quantity;
+  } else {
+    cart.items.push({ product: productId, quantity });
+  }
+
+  await cart.save();
+};

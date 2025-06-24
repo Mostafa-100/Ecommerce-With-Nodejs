@@ -8,7 +8,6 @@ const app = require("../app");
 const User = require("../models/User");
 
 jest.mock("../utils/sendEmail");
-const sendEmail = require("../utils/sendEmail");
 
 beforeAll(async () => {
   const MONGO_URI = "mongodb://db/ecommercetest";
@@ -60,10 +59,12 @@ describe("POST /register", () => {
 
     expect(storedUser).not.toBeNull();
     expect(storedUser.fullname).toBe(newUser.fullname);
-    isPasswordMatch = await bcrypt.compare(
+
+    const isPasswordMatch = await bcrypt.compare(
       newUser.password,
       storedUser.password
     );
+
     expect(isPasswordMatch).toBe(true);
   });
 
@@ -148,6 +149,7 @@ describe("POST /login", () => {
 describe("POST /password-reset-email-request", () => {
   it("should send reset email if user exists", async () => {
     const email = "m@g.com";
+
     const res = await request(app)
       .post("/password-reset-email-request")
       .send({ email });
@@ -171,16 +173,16 @@ describe("POST /password-reset-email-request", () => {
 describe("POST /reset-password", () => {
   it("should reset password if token is valid", async () => {
     const user = await User.findOne({ email: "m@g.com" });
+
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "10m",
     });
+
     const password = "Test@12345";
 
     const res = await request(app)
       .post("/reset-password")
       .send({ token, password });
-
-    console.log(res.body);
 
     expect(res.statusCode).toBe(200);
     expect(res.body).toHaveProperty("message", "Password has been reset");
@@ -190,6 +192,7 @@ describe("POST /reset-password", () => {
     const token = jwt.sign({ id: 1 }, "Notcorrect@12345", {
       expiresIn: "5m",
     });
+
     const password = "Password@12345";
 
     const res = await request(app)

@@ -25,7 +25,7 @@ const validateRequest = (req, res, next) => {
     return res.status(400).json({ errors: formattedErrors });
   }
 
-  next();
+  return next();
 };
 
 module.exports = validateRequest;

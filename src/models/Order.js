@@ -3,21 +3,21 @@ const Schema = mongoose.Schema;
 
 const orderSchema = Schema({
   user: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
   items: [
     {
       product: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: "Product",
       },
       quantity: {
         type: Number,
-        required: true
-      }
-    }
+        default: 1,
+      },
+    },
   ],
   totalAmount: {
     type: Number,
@@ -33,7 +33,7 @@ const orderSchema = Schema({
   createdAt: {
     type: Date,
     default: Date.now(),
-  }
+  },
 });
 
 const Order = mongoose.model("Order", orderSchema);

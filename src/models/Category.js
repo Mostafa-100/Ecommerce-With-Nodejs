@@ -20,7 +20,7 @@ const categorySchema = Schema({
 
 categorySchema.pre("save", function (next) {
   this.name = this.name.toLowerCase();
-  next();
+  return next();
 });
 
 function normalizeName(next) {
@@ -29,7 +29,7 @@ function normalizeName(next) {
     this.getUpdate().name = name;
   }
 
-  next();
+  return next();
 }
 
 categorySchema.pre("findOneAndUpdate", normalizeName);
