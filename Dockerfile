@@ -1,4 +1,4 @@
-FROM node
+FROM node:iron-slim
 
 WORKDIR /app
 

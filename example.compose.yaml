@@ -1,0 +1,48 @@
+services:
+  api:
+    depends_on:
+      - db
+      - redis
+    build: ./
+    ports:
+      - 3000:3000
+    environment:
+      DB_URL: mongodb://db/ecommerce
+      API_PORT: 3000
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET:
+      JWT_EXPIRES_IN:
+      MAILTRAP_HOST:
+      MAILTRAP_PORT:
+      MAILTRAP_AUTH_USER:
+      MAILTRAP_AUTH_PASS:
+      FRONTEND_URL: http://localhost:5173
+      STRIPE_PRIVATE_KEY:
+    develop:
+      watch:
+        - path: ./package.json
+          action: rebuild
+        - path: ./package-lock.json
+          action: rebuild
+        - path: ./
+          target: /app
+          action: sync
+
+  db:
+    image: mongo:8.0.10-rc0-noble
+    ports:
+      - 27018:27017
+    volumes:
+      - ecommerce:/data/db
+
+  redis:
+    image: redis:8.0.1
+    ports:
+      - 6378:6379
+    volumes:
+      - redis-data:/data
+
+volumes:
+  ecommerce:
+  redis-data:
