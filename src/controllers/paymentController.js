@@ -18,6 +18,8 @@ exports.createCheckoutSession = async (req, res, next) => {
 
     const checkoutSessionUrl = await getCheckoutSessionUrl(cart.items);
 
+    await cart.deleteOne();
+
     res.json({ url: checkoutSessionUrl });
   } catch (error) {
     next(error);

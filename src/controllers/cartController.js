@@ -3,7 +3,6 @@ const {
   getCart,
   addItemToCart,
   fetchCart,
-  migrateCartItems,
   deleteItem,
   deleteCart,
 } = require("../services/cartService");
@@ -14,21 +13,13 @@ exports.addToCart = async (req, res, next) => {
   const userId = req.user?.id;
   let guestId = req.cookies.guestId;
 
-  let cartOwnerId = null;
-
-  if (guestId) cartOwnerId = guestId;
-
-  if (userId) cartOwnerId = userId;
-
   if (!guestId && !userId) {
     guestId = uuidv4();
-    cartOwnerId = guestId;
     res.cookie("guestId", guestId, { maxAge: 1000 * 60 * 60 * 24 * 30 });
   }
 
-  const cart = await getCart(cartOwnerId);
-
   try {
+    const cart = await getCart(userId ?? guestId);
     await addItemToCart(cart, productId, quantity);
     res.json(cart);
   } catch (error) {
@@ -39,32 +30,23 @@ exports.addToCart = async (req, res, next) => {
 exports.getCartItems = async (req, res, error) => {
   const userId = req.user?.id;
   const guestId = req.cookies.guestId;
-  let userCart = null;
+  let cart = null;
 
   try {
     if (userId) {
-      userCart = await fetchCart(userId);
+      cart = await fetchCart(userId);
+    } else if (guestId) {
+      cart = await fetchCart(guestId);
     }
 
-    if (guestId) {
-      const guestCart = await fetchCart(guestId);
-      if (guestCart) {
-        if (userCart) {
-          await migrateCartItems(guestCart, userCart);
-        } else {
-          res.json(guestCart);
-        }
-      }
-    }
-
-    res.json(userCart);
+    res.json(cart);
   } catch (error) {
     next(error);
   }
 };
 
 exports.deleteCartItem = async (req, res, next) => {
-  const { itemId } = req.body;
+  const { itemId } = req.params;
   const userId = req.user?.id;
   const guestId = req.cookies.guestId;
 
@@ -75,12 +57,14 @@ exports.deleteCartItem = async (req, res, next) => {
       if (!cart) throw new AppError("cart not found", 404);
 
       await deleteItem(cart, itemId);
-    } else {
+    } else if (guestId) {
       const cart = await fetchCart(guestId);
 
       if (!cart) throw new AppError("cart not found", 404);
 
       await deleteItem(cart, itemId);
+    } else {
+      throw new AppError("owner cart id not provided", 400);
     }
 
     res.json({ message: "cart item has been deleted successfuly" });
@@ -95,7 +79,8 @@ exports.deleteCart = async (req, res, next) => {
 
   try {
     if (userId) await deleteCart(userId);
-    if (guestId) await deleteCart(guestId);
+    else if (guestId) await deleteCart(guestId);
+    else throw new AppError("owner cart id not provided", 400);
 
     res.json({ message: "cart has been deleted successfuly" });
   } catch (error) {

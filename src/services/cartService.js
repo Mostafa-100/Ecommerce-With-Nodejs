@@ -1,6 +1,31 @@
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
+const User = require("../models/User");
 const AppError = require("../utils/AppError");
+const eventEmitter = require("../utils/eventEmitter");
+const jwt = require("jsonwebtoken");
+
+eventEmitter.on("userLoggedIn", async ({ token, guestId }) => {
+  const cartAsGuest = await Cart.findOne({ ownerId: guestId });
+
+  if (!cartAsGuest) {
+    return;
+  }
+
+  if (cartAsGuest.items.length === 0) {
+    await cartAsGuest.deleteOne();
+    return;
+  }
+
+  const decode = jwt.verify(token, process.env.JWT_SECRET);
+
+  const cartAsUser = new Cart({ ownerId: decode.id });
+
+  cartAsUser.items = cartAsGuest.items;
+
+  await cartAsGuest.deleteOne();
+  await cartAsUser.save();
+});
 
 exports.getCart = async (cartOwnerId) => {
   const cart = await Cart.findOne({ ownerId: cartOwnerId });
@@ -37,12 +62,6 @@ exports.addItemToCart = async (cart, productId, quantity) => {
 exports.fetchCart = async (ownerId) => {
   const cart = await Cart.findOne({ ownerId }).populate("items.product");
   return cart;
-};
-
-exports.migrateCartItems = async (fromCart, toCart) => {
-  toCart.items.push(...fromCart.items);
-  await toCart.save();
-  await fromCart.deleteMany();
 };
 
 exports.deleteItem = async (cart, itemId) => {

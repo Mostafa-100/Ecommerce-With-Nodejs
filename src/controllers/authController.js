@@ -1,4 +1,5 @@
 const path = require("path");
+const eventEmitter = require("../utils/eventEmitter");
 
 const {
   registerUser,
@@ -22,7 +23,15 @@ exports.register = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   try {
     const userData = req.body;
+    const guestId = req.cookies.guestId;
+
     const token = await getUserToken(userData);
+
+    if (guestId) {
+      eventEmitter.emit("userLoggedIn", { token, guestId });
+      res.clearCookie("guestId");
+    }
+
     res.json({ token });
   } catch (error) {
     next(error);

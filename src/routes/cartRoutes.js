@@ -8,7 +8,7 @@ router.use(verifyToken);
 
 router.post("/add-to-cart", cartController.addToCart);
 router.get("/cart-items", cartController.getCartItems);
-router.delete("/delete-cart-item", cartController.deleteCartItem);
+router.delete("/delete-cart-item/:itemId", cartController.deleteCartItem);
 router.delete("/delete-cart", cartController.deleteCart);
 
 module.exports = router;
